@@ -123,10 +123,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\huff.cpp" />
+    <ClCompile Include="src\Puff.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <Text Include="Test.txt" />
+    <Text Include="text1.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="test.huf" />
+    <None Include="text1.huf" />
+    <None Include="test.bin" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

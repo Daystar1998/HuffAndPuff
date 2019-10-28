@@ -15,11 +15,21 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\huff.cpp">
+    <ClCompile Include="src\Puff.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="Test.txt" />
+    <Text Include="text1.txt" />
+    <Text Include="test.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="test.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="test.huf">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="text1.huf" />
   </ItemGroup>
 </Project>

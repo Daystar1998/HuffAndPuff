@@ -1,1 +1,2 @@
-HOO   AAACCCTTTT
+abc
+abbcc

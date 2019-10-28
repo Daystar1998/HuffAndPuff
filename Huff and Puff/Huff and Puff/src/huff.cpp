@@ -14,6 +14,7 @@
 
 using namespace std;
 
+// Not including the EOF glyph
 const int MAX_GLYPHS = 256;
 const int EOF_GLYPH = -1;
 

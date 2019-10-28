@@ -125,11 +125,11 @@ vector<HuffmanNode> generateInitialHuffmanTable(char* data, int dataLength) {
 	Des:
 		Reheap the huffman table if necessary
 	Params:
-		huffmanTable - type vector<HuffmanNode>, the huffman table
+		huffmanTable - type vector<HuffmanNode> &, the huffman table
 		reheapStartIndex - type int, the index where the reheap should start
 		topOfHeap - type int, top of the heap of unsorted nodes
 ******************************************************************************/
-void reheap(vector<HuffmanNode> huffmanTable, int reheapStartIndex, int topOfHeap) {
+void reheap(vector<HuffmanNode> &huffmanTable, int reheapStartIndex, int topOfHeap) {
 
 	int leftNodeIndex = reheapStartIndex * 2 + 1;
 	int rightNodeIndex = reheapStartIndex * 2 + 2;
@@ -175,12 +175,10 @@ void reheap(vector<HuffmanNode> huffmanTable, int reheapStartIndex, int topOfHea
 	Des:
 		Builds the huffman table
 	Params:
-		huffmanTable - type vector<HuffmanNode>, the huffman table
+		huffmanTable - type vector<HuffmanNode> &, the huffman table
 		topOfHeap - type int, top of the heap of unsorted nodes
-	Returns:
-		type vector<HuffmanNode>, the huffman table
 ******************************************************************************/
-vector<HuffmanNode> buildHuffmanTable(vector<HuffmanNode> huffmanTable, int topOfHeap) {
+void buildHuffmanTable(vector<HuffmanNode> &huffmanTable, int topOfHeap) {
 
 	int markedIndex;
 
@@ -218,12 +216,12 @@ vector<HuffmanNode> buildHuffmanTable(vector<HuffmanNode> huffmanTable, int topO
 		node.left = topOfHeap;
 		node.right = huffmanTable.size() - 1;
 
+		huffmanTable[ROOT_NODE] = node;
+
 		reheap(huffmanTable, ROOT_NODE, topOfHeap - 1);
 
-		huffmanTable = buildHuffmanTable(huffmanTable, topOfHeap - 1);
+		buildHuffmanTable(huffmanTable, topOfHeap - 1);
 	}
-
-	return huffmanTable;
 }
 
 int main() {
@@ -242,7 +240,7 @@ int main() {
 
 		vector<HuffmanNode> huffmanTable = generateInitialHuffmanTable(data, fileLength);
 
-		huffmanTable = buildHuffmanTable(huffmanTable, huffmanTable.size());
+		buildHuffmanTable(huffmanTable, huffmanTable.size() - 1);
 
 		delete[fileLength] data;
 	}

@@ -20,6 +20,10 @@ const int EOF_GLYPH = -1;
 const int EOF_GLYPH_COUNT = 1;
 const int DEFAULT_NODE_POINTER = -1;
 
+const int ROOT_NODE = 0;
+const int SLOT_TWO_INDEX = 1;
+const int SLOT_THREE_INDEX = 2;
+
 struct HuffmanNode {
 
 	int glyph;
@@ -38,7 +42,7 @@ struct HuffmanNode {
 	Returns:
 		type char *, the contents of the file
 ******************************************************************************/
-char* readFile(string fileName, int &oFileLength) {
+char* readFile(string fileName, int& oFileLength) {
 
 	char* result = nullptr;
 
@@ -116,6 +120,110 @@ vector<HuffmanNode> generateInitialHuffmanTable(char* data, int dataLength) {
 	return result;
 }
 
+/******************************************************************************
+	Name: reheap
+	Des:
+		Reheap the huffman table if necessary
+	Params:
+		huffmanTable - type vector<HuffmanNode> &, the huffman table
+		reheapStartIndex - type int, the index where the reheap should start
+		topOfHeap - type int, top of the heap of unsorted nodes
+******************************************************************************/
+void reheap(vector<HuffmanNode> &huffmanTable, int reheapStartIndex, int topOfHeap) {
+
+	int leftNodeIndex = reheapStartIndex * 2 + 1;
+	int rightNodeIndex = reheapStartIndex * 2 + 2;
+
+	if (rightNodeIndex <= topOfHeap) {
+
+		// Either left or right is less than start
+		if (huffmanTable[leftNodeIndex].frequency < huffmanTable[reheapStartIndex].frequency || huffmanTable[rightNodeIndex].frequency < huffmanTable[reheapStartIndex].frequency){
+
+			// Right is less than left
+			if (huffmanTable[rightNodeIndex].frequency < huffmanTable[leftNodeIndex].frequency) {
+
+				HuffmanNode tempNode = huffmanTable[rightNodeIndex];
+
+				huffmanTable[rightNodeIndex] = huffmanTable[reheapStartIndex];
+				huffmanTable[reheapStartIndex] = tempNode;
+				reheap(huffmanTable, rightNodeIndex, topOfHeap);
+			// Left is less than or equal to right
+			} else {
+
+				HuffmanNode tempNode = huffmanTable[leftNodeIndex];
+
+				huffmanTable[leftNodeIndex] = huffmanTable[reheapStartIndex];
+				huffmanTable[reheapStartIndex] = tempNode;
+				reheap(huffmanTable, leftNodeIndex, topOfHeap);
+			}
+		}
+	} else if (leftNodeIndex == topOfHeap) {
+
+		if (huffmanTable[leftNodeIndex].frequency < huffmanTable[reheapStartIndex].frequency) {
+
+			HuffmanNode tempNode = huffmanTable[leftNodeIndex];
+
+			huffmanTable[leftNodeIndex] = huffmanTable[reheapStartIndex];
+			huffmanTable[reheapStartIndex] = tempNode;
+			// Do not need to reheap final node
+		}
+	}
+}
+
+/******************************************************************************
+	Name: buildHuffmanTable
+	Des:
+		Builds the huffman table
+	Params:
+		huffmanTable - type vector<HuffmanNode> &, the huffman table
+		topOfHeap - type int, top of the heap of unsorted nodes
+******************************************************************************/
+void buildHuffmanTable(vector<HuffmanNode> &huffmanTable, int topOfHeap) {
+
+	int markedIndex;
+
+	if (topOfHeap != ROOT_NODE) {
+
+		// Mark the lower frequency glyph at the second or third index
+		if (topOfHeap == SLOT_TWO_INDEX) {
+
+			markedIndex = SLOT_TWO_INDEX;
+		} else {
+
+			if (huffmanTable[SLOT_TWO_INDEX].frequency > huffmanTable[SLOT_THREE_INDEX].frequency) {
+
+				markedIndex = SLOT_THREE_INDEX;
+			} else {
+
+				markedIndex = SLOT_TWO_INDEX;
+			}
+		}
+
+		huffmanTable.push_back(huffmanTable[markedIndex]);
+
+		if (topOfHeap != markedIndex) {
+
+			huffmanTable[markedIndex] = huffmanTable[topOfHeap];
+			reheap(huffmanTable, markedIndex, topOfHeap);
+		}
+
+		huffmanTable[topOfHeap] = huffmanTable[ROOT_NODE];
+
+		// Create merge node
+		HuffmanNode node;
+		node.glyph = DEFAULT_NODE_POINTER;
+		node.frequency = huffmanTable[topOfHeap].frequency + huffmanTable[huffmanTable.size() - 1].frequency;
+		node.left = topOfHeap;
+		node.right = huffmanTable.size() - 1;
+
+		huffmanTable[ROOT_NODE] = node;
+
+		reheap(huffmanTable, ROOT_NODE, topOfHeap - 1);
+
+		buildHuffmanTable(huffmanTable, topOfHeap - 1);
+	}
+}
+
 int main() {
 
 	string fileName;
@@ -131,6 +239,8 @@ int main() {
 	if (data != nullptr) {
 
 		vector<HuffmanNode> huffmanTable = generateInitialHuffmanTable(data, fileLength);
+
+		buildHuffmanTable(huffmanTable, huffmanTable.size() - 1);
 
 		delete[fileLength] data;
 	}

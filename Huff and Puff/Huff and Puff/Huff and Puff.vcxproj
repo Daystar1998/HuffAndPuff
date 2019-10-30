@@ -123,7 +123,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\Puff.cpp" />
+    <ClCompile Include="src\huff.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="text1.txt" />

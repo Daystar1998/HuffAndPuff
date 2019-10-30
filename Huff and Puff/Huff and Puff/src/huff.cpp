@@ -6,11 +6,12 @@
 	Date: 10/28/2019
 ******************************************************************************/
 
-#include <iostream>
+#include <algorithm>
 #include <fstream>
+#include <iostream>
+#include <map>
 #include <string>
 #include <vector>
-#include <algorithm>
 
 using namespace std;
 
@@ -225,6 +226,37 @@ void buildHuffmanTable(vector<HuffmanNode> &huffmanTable, int topOfHeap) {
 	}
 }
 
+/******************************************************************************
+	Name: buildHuffmanTable
+	Des:
+		Generate map of glyph bitcodes
+	Params:
+		huffmanTable - type vector<HuffmanNode> &, the huffman table
+		bitcodeMap - type map<int, string> &, the map of glyphs to bitcodes
+		bitcode - type string, the current bitcode
+		currentIndex - type int, the current node index
+******************************************************************************/
+void generateBitcodes(vector<HuffmanNode>& huffmanTable, map<int, string> &bitcodeMap, string bitcode, int currentIndex) {
+
+	HuffmanNode currentNode = huffmanTable[currentIndex];
+
+	if (currentNode.left == DEFAULT_NODE_POINTER && currentNode.right == DEFAULT_NODE_POINTER) {
+
+		bitcodeMap[currentNode.glyph] = bitcode;
+	} else {
+
+		if (currentNode.left != DEFAULT_NODE_POINTER) {
+
+			generateBitcodes(huffmanTable, bitcodeMap, bitcode + '0', currentNode.left);
+		}
+
+		if (currentNode.right != DEFAULT_NODE_POINTER) {
+
+			generateBitcodes(huffmanTable, bitcodeMap, bitcode + '1', currentNode.right);
+		}
+	}
+}
+
 int main() {
 
 	string fileName;
@@ -242,6 +274,10 @@ int main() {
 		vector<HuffmanNode> huffmanTable = generateInitialHuffmanTable(data, fileLength);
 
 		buildHuffmanTable(huffmanTable, huffmanTable.size() - 1);
+
+		map<int, string> bitcodeMap;
+
+		generateBitcodes(huffmanTable, bitcodeMap, "", ROOT_NODE);
 
 		delete[fileLength] data;
 	}

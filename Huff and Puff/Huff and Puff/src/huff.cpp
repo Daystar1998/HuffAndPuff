@@ -15,8 +15,7 @@
 
 using namespace std;
 
-// Not including the EOF glyph
-const int MAX_GLYPHS = 256;
+const int MAX_GLYPHS = 257;
 const int EOF_GLYPH = -1;
 
 const int EOF_GLYPH_COUNT = 1;
@@ -40,23 +39,25 @@ struct HuffmanNode {
 		Reads a file
 	Params:
 		fileName - type string, the name of the file
-		oFileLength - type int &, the length of the file
+		oDataLength - type int &, the length of the data
 	Returns:
 		type char *, the contents of the file
 ******************************************************************************/
-char* readFile(string fileName, int& oFileLength) {
+char *readFile(string fileName, int &oDataLength) {
 
-	char* result = nullptr;
+	char *result = nullptr;
 
 	ifstream fin;
 	fin.open(fileName, ios::in | ios::binary | ios::ate);
 
 	if (fin.is_open()) {
 
-		oFileLength = fin.tellg();
+		oDataLength = (int)fin.tellg() + 1;
 		fin.seekg(ios::beg);
-		result = new char[oFileLength];
-		fin.read(result, oFileLength);
+		result = new char[oDataLength];
+		fin.read(result, (streamsize)oDataLength - 1);
+
+		result[oDataLength - 1] = EOF_GLYPH;
 	}
 
 	fin.close();
@@ -74,7 +75,7 @@ char* readFile(string fileName, int& oFileLength) {
 	Returns:
 		type vector<HuffmanNode>, the huffman table
 ******************************************************************************/
-vector<HuffmanNode> generateInitialHuffmanTable(char* data, int dataLength) {
+vector<HuffmanNode> generateInitialHuffmanTable(char *data, int dataLength) {
 
 	vector<int> frequencyTable(MAX_GLYPHS);
 
@@ -82,7 +83,13 @@ vector<HuffmanNode> generateInitialHuffmanTable(char* data, int dataLength) {
 
 		int glyph = data[i];
 
-		frequencyTable[glyph]++;
+		if (glyph == EOF_GLYPH) {
+
+			frequencyTable[MAX_GLYPHS - 1]++;
+		} else {
+
+			frequencyTable[glyph]++;
+		}
 	}
 
 	vector<HuffmanNode> result;
@@ -102,16 +109,6 @@ vector<HuffmanNode> generateInitialHuffmanTable(char* data, int dataLength) {
 			result.push_back(node);
 		}
 	}
-
-	// Add the EOF glyph to the table
-	HuffmanNode node;
-
-	node.glyph = EOF_GLYPH;
-	node.frequency = EOF_GLYPH_COUNT;
-	node.left = DEFAULT_NODE_POINTER;
-	node.right = DEFAULT_NODE_POINTER;
-
-	result.push_back(node);
 
 	// Sort by frequency
 	sort(result.begin(), result.end(), [](HuffmanNode a, HuffmanNode b) {
@@ -139,7 +136,7 @@ void reheap(vector<HuffmanNode> &huffmanTable, int reheapStartIndex, int topOfHe
 	if (rightNodeIndex <= topOfHeap) {
 
 		// Either left or right is less than start
-		if (huffmanTable[leftNodeIndex].frequency < huffmanTable[reheapStartIndex].frequency || huffmanTable[rightNodeIndex].frequency < huffmanTable[reheapStartIndex].frequency){
+		if (huffmanTable[leftNodeIndex].frequency < huffmanTable[reheapStartIndex].frequency || huffmanTable[rightNodeIndex].frequency < huffmanTable[reheapStartIndex].frequency) {
 
 			// Right is less than left
 			if (huffmanTable[rightNodeIndex].frequency < huffmanTable[leftNodeIndex].frequency) {
@@ -216,7 +213,7 @@ void buildHuffmanTable(vector<HuffmanNode> &huffmanTable, int topOfHeap) {
 		node.glyph = DEFAULT_NODE_POINTER;
 		node.frequency = huffmanTable[topOfHeap].frequency + huffmanTable[huffmanTable.size() - 1].frequency;
 		node.left = topOfHeap;
-		node.right = huffmanTable.size() - 1;
+		node.right = (int)huffmanTable.size() - 1;
 
 		huffmanTable[ROOT_NODE] = node;
 
@@ -236,7 +233,7 @@ void buildHuffmanTable(vector<HuffmanNode> &huffmanTable, int topOfHeap) {
 		bitcode - type string, the current bitcode
 		currentIndex - type int, the current node index
 ******************************************************************************/
-void generateBitcodes(vector<HuffmanNode>& huffmanTable, map<int, string> &bitcodeMap, string bitcode, int currentIndex) {
+void generateBitcodes(vector<HuffmanNode> &huffmanTable, map<int, string> &bitcodeMap, string bitcode, int currentIndex) {
 
 	HuffmanNode currentNode = huffmanTable[currentIndex];
 
@@ -267,13 +264,13 @@ int main() {
 
 	int fileLength;
 
-	char* data = readFile(fileName, fileLength);
+	char *data = readFile(fileName, fileLength);
 
 	if (data != nullptr) {
 
 		vector<HuffmanNode> huffmanTable = generateInitialHuffmanTable(data, fileLength);
 
-		buildHuffmanTable(huffmanTable, huffmanTable.size() - 1);
+		buildHuffmanTable(huffmanTable, (int)huffmanTable.size() - 1);
 
 		map<int, string> bitcodeMap;
 

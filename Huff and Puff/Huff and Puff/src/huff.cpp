@@ -227,7 +227,7 @@ void buildHuffmanTable(vector<HuffmanNode> &huffmanTable, int topOfHeap) {
 }
 
 /******************************************************************************
-	Name: buildHuffmanTable
+	Name: generateBitcodes
 	Des:
 		Generate map of glyph bitcodes
 	Params:

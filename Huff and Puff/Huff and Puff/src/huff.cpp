@@ -16,7 +16,7 @@
 using namespace std;
 
 const int MAX_GLYPHS = 257;
-const int EOF_GLYPH = 256;
+const int EOF_GLYPH = -1;
 
 const int BYTE_SIZE = 8;
 
@@ -83,15 +83,10 @@ vector<HuffmanNode> generateInitialHuffmanTable(char *data, int dataLength) {
 
 	for (int i = 0; i < dataLength; i++) {
 
-		int glyph = data[i];
+		// Offset so the EOF glyph is in the 0 slot
+		int glyph = data[i] + 1;
 
-		if (glyph == EOF_GLYPH) {
-
-			frequencyTable[MAX_GLYPHS - 1]++;
-		} else {
-
-			frequencyTable[glyph]++;
-		}
+		frequencyTable[glyph]++;
 	}
 
 	vector<HuffmanNode> result;
@@ -103,7 +98,8 @@ vector<HuffmanNode> generateInitialHuffmanTable(char *data, int dataLength) {
 
 			HuffmanNode node;
 
-			node.glyph = i;
+			// Offset to return glyph to its correct value
+			node.glyph = i - 1;
 			node.frequency = frequencyTable[i];
 			node.left = DEFAULT_NODE_POINTER;
 			node.right = DEFAULT_NODE_POINTER;

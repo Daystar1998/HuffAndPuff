@@ -40,12 +40,12 @@ struct HuffmanNode {
 	Des:
 		Reads a file
 	Params:
-		fileName - type string, the name of the file
+		fileName - type string &, the name of the file
 		oDataLength - type int &, the length of the data
 	Returns:
 		type char *, the contents of the file
 ******************************************************************************/
-char *readFile(string fileName, int &oDataLength) {
+char *readFile(string &fileName, int &oDataLength) {
 
 	char *result = nullptr;
 
@@ -109,7 +109,7 @@ vector<HuffmanNode> generateInitialHuffmanTable(char *data, int dataLength) {
 	}
 
 	// Sort by frequency
-	sort(result.begin(), result.end(), [](HuffmanNode a, HuffmanNode b) {
+	sort(result.begin(), result.end(), [](HuffmanNode &a, HuffmanNode &b) {
 
 		return a.frequency < b.frequency;
 		});
@@ -259,7 +259,7 @@ void generateBitcodes(vector<HuffmanNode> &huffmanTable, map<int, string> &bitco
 	Des:
 		Compress the data using bitcodes
 	Params:
-		huffmanTable - type vector<HuffmanNode> &, the huffman table
+		bitcodeMap - type map<int, string> &bitcodeMap &, the map of bitcodes
 		data - type char *, the original data
 		dataLength - type int, the length of the original data
 		compressedDataLengthInBytes - type int, the length of the
@@ -267,7 +267,7 @@ void generateBitcodes(vector<HuffmanNode> &huffmanTable, map<int, string> &bitco
 	Returns:
 		type char*, the compressed data
 ******************************************************************************/
-char* compressData(map<int, string> &bitcodeMap, char *data, int dataLength, int compressedDataLengthInBytes) {
+char *compressData(map<int, string> &bitcodeMap, char *data, int dataLength, int compressedDataLengthInBytes) {
 
 	char *compressedData = new char[compressedDataLengthInBytes];
 
@@ -307,13 +307,53 @@ char* compressData(map<int, string> &bitcodeMap, char *data, int dataLength, int
 	return compressedData;
 }
 
+/******************************************************************************
+	Name: printOutput
+	Des:
+		Print the compressed data to a file
+	Params:
+		fileName - type string &, the name of the file
+		huffmanTable - type vector<HuffmanNode> &, the huffman table
+		compressedData - type char *, the compressed data
+		compressedDataLengthInBytes - type int, the length of the
+			compressedData in bytes
+******************************************************************************/
+void printOutput(string &fileName, vector<HuffmanNode> &huffmanTable, char *compressedData, int compressedDataLengthInBytes) {
+
+	string hufFileExtension = ".huf";
+
+	string outputFileName = fileName.substr(0, fileName.find_last_of('.')) + hufFileExtension;
+
+	ofstream fout(outputFileName, ios::out | ios::binary);
+
+	if (fout.is_open()) {
+
+		int originalFileNameLength = fileName.size();
+		int numberOfHuffmanEntries = huffmanTable.size();
+
+		fout.write((char *)& originalFileNameLength, sizeof(int));
+		fout.write((char *)fileName.c_str(), originalFileNameLength);
+
+		fout.write((char *)& numberOfHuffmanEntries, sizeof(int));
+
+		for (int i = 0; i < huffmanTable.size(); i++) {
+
+			fout.write((char *)& huffmanTable[i].glyph, sizeof(int));
+			fout.write((char *)& huffmanTable[i].left, sizeof(int));
+			fout.write((char *)& huffmanTable[i].right, sizeof(int));
+		}
+
+		fout.write(compressedData, compressedDataLengthInBytes);
+	}
+
+	fout.close();
+}
+
 int main() {
 
 	string fileName;
 
 	cin >> fileName;
-
-	cout << fileName;
 
 	int dataLength;
 
@@ -334,8 +374,11 @@ int main() {
 		// Convert from bits to bytes
 		compressedDataLength = ceil(compressedDataLength / (double)BYTE_SIZE);
 
-		char* compressedData = compressData(bitcodeMap, data, dataLength, compressedDataLength);
+		char *compressedData = compressData(bitcodeMap, data, dataLength, compressedDataLength);
 
+		printOutput(fileName, huffmanTable, compressedData, compressedDataLength);
+
+		delete[compressedDataLength] compressedData;
 		delete[dataLength] data;
 	}
 }

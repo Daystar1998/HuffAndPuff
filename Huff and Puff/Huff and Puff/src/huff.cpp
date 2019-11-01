@@ -16,7 +16,7 @@
 using namespace std;
 
 const int MAX_GLYPHS = 257;
-const int EOF_GLYPH = -1;
+const int EOF_GLYPH = 256;
 
 const int BYTE_SIZE = 8;
 
@@ -54,12 +54,10 @@ char *readFile(string &fileName, int &oDataLength) {
 
 	if (fin.is_open()) {
 
-		oDataLength = (int)fin.tellg() + 1;
+		oDataLength = (int)fin.tellg();
 		fin.seekg(ios::beg);
 		result = new char[oDataLength];
-		fin.read(result, (streamsize)oDataLength - 1);
-
-		result[oDataLength - 1] = EOF_GLYPH;
+		fin.read(result, (streamsize)oDataLength);
 	}
 
 	fin.close();
@@ -88,6 +86,8 @@ vector<HuffmanNode> generateInitialHuffmanTable(char *data, int dataLength) {
 		frequencyTable[glyph]++;
 	}
 
+	frequencyTable[EOF_GLYPH] = 1;
+
 	vector<HuffmanNode> result;
 
 	for (int i = 0; i < MAX_GLYPHS; i++) {
@@ -105,15 +105,6 @@ vector<HuffmanNode> generateInitialHuffmanTable(char *data, int dataLength) {
 			result.push_back(node);
 		}
 	}
-
-	HuffmanNode node;
-
-	node.glyph = EOF_GLYPH;
-	node.frequency = 1;
-	node.left = DEFAULT_NODE_POINTER;
-	node.right = DEFAULT_NODE_POINTER;
-
-	result.push_back(node);
 
 	// Sort by frequency
 	sort(result.begin(), result.end(), [](HuffmanNode &a, HuffmanNode &b) {
@@ -246,7 +237,7 @@ void generateBitcodes(vector<HuffmanNode> &huffmanTable, map<int, string> &bitco
 	if (currentNode.left == DEFAULT_NODE_POINTER && currentNode.right == DEFAULT_NODE_POINTER) {
 
 		bitcodeMap[currentNode.glyph] = bitcode;
-		oCompressedDataLength += bitcode.size() * currentNode.frequency;
+		oCompressedDataLength += (int)bitcode.size() * currentNode.frequency;
 	} else {
 
 		if (currentNode.left != DEFAULT_NODE_POINTER) {
@@ -276,12 +267,10 @@ void generateBitcodes(vector<HuffmanNode> &huffmanTable, map<int, string> &bitco
 ******************************************************************************/
 unsigned char *compressData(map<int, string> &bitcodeMap, char *data, int dataLength, int compressedDataLengthInBytes) {
 
-	unsigned char *compressedData = new unsigned char[compressedDataLengthInBytes];
+	unsigned char *compressedData = new unsigned char[compressedDataLengthInBytes] { 0 };
 
 	int currentCompressedByte = 0;
 	int currentBit = 0;
-
-	compressedData[currentCompressedByte] = 0;
 
 	// Encode right to left
 
@@ -295,7 +284,6 @@ unsigned char *compressData(map<int, string> &bitcodeMap, char *data, int dataLe
 
 				currentBit = 0;
 				currentCompressedByte++;
-				compressedData[currentCompressedByte] = 0;
 			}
 
 			if (currentGlyphBitcode[j] == '1') {
@@ -309,6 +297,29 @@ unsigned char *compressData(map<int, string> &bitcodeMap, char *data, int dataLe
 
 			currentBit++;
 		}
+	}
+
+	// Add EOF glyph
+	string currentGlyphBitcode = bitcodeMap[EOF_GLYPH];
+
+	for (int j = 0; j < currentGlyphBitcode.size(); j++) {
+
+		if (currentBit >= sizeof(char) * BYTE_SIZE) {
+
+			currentBit = 0;
+			currentCompressedByte++;
+		}
+
+		if (currentGlyphBitcode[j] == '1') {
+
+			unsigned char bit = 0b00000001 << currentBit;
+			compressedData[currentCompressedByte] |= bit;
+		} else {
+
+			// Do nothing
+		}
+
+		currentBit++;
 	}
 
 	return compressedData;
@@ -335,8 +346,8 @@ void printOutput(string &fileName, vector<HuffmanNode> &huffmanTable, unsigned c
 
 	if (fout.is_open()) {
 
-		int originalFileNameLength = fileName.size();
-		int numberOfHuffmanEntries = huffmanTable.size();
+		int originalFileNameLength = (int)fileName.size();
+		int numberOfHuffmanEntries = (int)huffmanTable.size();
 
 		fout.write((char *)& originalFileNameLength, sizeof(int));
 		fout.write((char *)fileName.c_str(), originalFileNameLength);
@@ -350,7 +361,7 @@ void printOutput(string &fileName, vector<HuffmanNode> &huffmanTable, unsigned c
 			fout.write((char *)& huffmanTable[i].right, sizeof(int));
 		}
 
-		fout.write((char*)compressedData, compressedDataLengthInBytes);
+		fout.write((char *)compressedData, compressedDataLengthInBytes);
 	}
 
 	fout.close();
@@ -379,7 +390,7 @@ int main() {
 		generateBitcodes(huffmanTable, bitcodeMap, "", ROOT_NODE, compressedDataLength);
 
 		// Convert from bits to bytes
-		compressedDataLength = ceil(compressedDataLength / (double)BYTE_SIZE);
+		compressedDataLength = (int)ceil(compressedDataLength / (double)BYTE_SIZE);
 
 		unsigned char *compressedData = compressData(bitcodeMap, data, dataLength, compressedDataLength);
 

@@ -13,7 +13,7 @@ const int BYTESIZE = 8;
 
 struct huffEntry
 {
-	unsigned char glyph;
+	int glyph;
 	int leftPointer;
 	int rightPointer;
 };
@@ -43,7 +43,7 @@ void readFileInfo(ifstream& fin, int huffDataSize, huffEntry* huffTree, int* bit
 			else
 				bitString[huffDataBitCounter] = 0;
 
-			cout << bitString[huffDataBitCounter];
+			/*cout << bitString[huffDataBitCounter];*/
 			huffDataBitCounter++;
 		}
 	}
@@ -58,9 +58,7 @@ void readHuffTable(ifstream& fin, int huffTableEntries, huffEntry* huffTree)
 	int j = 0;
 	for (int i = 0; i < huffTableEntries; i++)
 	{
-		fin.read((char*)&huffTree[i].glyph, sizeof(unsigned char));
-		getPointerLocation = fin.tellg();
-		fin.seekg(getPointerLocation + 3);
+		fin.read((char*)&huffTree[i].glyph, sizeof(int));
 		fin.read((char*)&huffTree[i].leftPointer, sizeof(int));
 		fin.read((char*)&huffTree[i].rightPointer, sizeof(int));
 
@@ -90,8 +88,10 @@ void writeBitString(ofstream& fout, huffEntry* huffTree, int* bitString, int huf
 	for (int i = 0; i < huffDataBitSize; i++)
 	{
 		//make code to decode the bitstring
-		if (huffTree[nodePosition].glyph == NULL)
+		if (huffTree[nodePosition].glyph == 256 && huffTree[nodePosition].rightPointer == -1 && huffTree[nodePosition].leftPointer == -1)
 		{
+			cout << huffTree[nodePosition].glyph << " " << huffTree[nodePosition].rightPointer << " " << huffTree[nodePosition].leftPointer;
+
 			return;
 		}
 
@@ -107,7 +107,7 @@ void writeBitString(ofstream& fout, huffEntry* huffTree, int* bitString, int huf
 
 		else
 		{
-			fout << huffTree[nodePosition].glyph;
+			fout << (char)huffTree[nodePosition].glyph;
 			//fout.write((char*)&huffTree[nodePosition].glyph, sizeof(unsigned char));
 			nodePosition = 0;
 			i--;

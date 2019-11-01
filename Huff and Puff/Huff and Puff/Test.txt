@@ -1,1 +1,2 @@
-CAT HAT COT COAT
+abc
+abbcc

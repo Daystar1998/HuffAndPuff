@@ -123,15 +123,21 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\huff.cpp" />
-  </ItemGroup>
-  <ItemGroup>
+    <Text Include="Test.txt" />
     <Text Include="text1.txt" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="links.huf" />
+    <None Include="ptw32.huf" />
     <None Include="test.huf" />
     <None Include="text1.huf" />
     <None Include="test.bin" />
+    <None Include="ttax.exe" />
+    <None Include="ttax.huf" />
+    <None Include="ttaxCreate.exe" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\Puff.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

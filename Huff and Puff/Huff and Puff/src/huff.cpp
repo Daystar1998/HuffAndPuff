@@ -276,7 +276,7 @@ unsigned char *compressData(map<int, string> &bitcodeMap, char *data, int dataLe
 
 	for (int i = 0; i < dataLength; i++) {
 
-		string currentGlyphBitcode = bitcodeMap[data[i]];
+		string currentGlyphBitcode = bitcodeMap[(unsigned char)data[i]];
 
 		for (int j = 0; j < currentGlyphBitcode.size(); j++) {
 

@@ -79,19 +79,19 @@ char *readFile(string &fileName, int &oDataLength) {
 ******************************************************************************/
 vector<HuffmanNode> generateInitialHuffmanTable(char *data, int dataLength) {
 
-	vector<int> frequencyTable(MAX_GLYPHS);
+	int frequencyTable[MAX_GLYPHS] = { 0 };
 
 	for (int i = 0; i < dataLength; i++) {
 
 		// Offset so the EOF glyph is in the 0 slot
-		int glyph = data[i] + 1;
+		unsigned char glyph = data[i] + 1;
 
 		frequencyTable[glyph]++;
 	}
 
 	vector<HuffmanNode> result;
 
-	for (int i = 0; i < frequencyTable.size(); i++) {
+	for (int i = 0; i < MAX_GLYPHS; i++) {
 
 		// If the glyph has a frequency greater than zero
 		if (frequencyTable[i] > 0) {

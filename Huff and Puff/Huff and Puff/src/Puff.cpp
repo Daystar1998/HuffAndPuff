@@ -70,28 +70,17 @@ void readHuffTable(ifstream& fin, int huffTableEntries, huffEntry* huffTree)
 
 void readHeader(ifstream& fin, int& HuffTableEntries, int& fileNameLength, unsigned char* compressedFile)
 {
+	fin.read((char*)compressedFile, fileNameLength);
+	fin.read((char*)&HuffTableEntries, sizeof(int));
 
-	if (fin.is_open())
+	compressedFile[fileNameLength] = NULL;
+	cout << fileNameLength << endl;
+	for (int i = 0; i < fileNameLength; i++)
 	{
-		fin.read((char*)&fileNameLength, sizeof(int));
-		fin.read((char*)compressedFile, fileNameLength);
-		fin.read((char*)&HuffTableEntries, sizeof(int));
-
-		compressedFile[fileNameLength] = NULL;
-		cout << fileNameLength << endl;
-		for (int i = 0; i < fileNameLength; i++)
-		{
-			cout << compressedFile[i];
-		}
-
-		cout << endl << HuffTableEntries << endl;
+		cout << compressedFile[i];
 	}
 
-	else
-	{
-		cout << "unable to open file...program exiting" << endl;
-		exit(EXIT_FAILURE);
-	}
+	cout << endl << HuffTableEntries << endl;
 }
 
 void writeBitString(ofstream& fout, huffEntry* huffTree, int* bitString, int huffDataBitSize)
@@ -101,10 +90,10 @@ void writeBitString(ofstream& fout, huffEntry* huffTree, int* bitString, int huf
 	for (int i = 0; i < huffDataBitSize; i++)
 	{
 		//make code to decode the bitstring
-		/*if (huffTree[nodePosition].glyph == ENDOFFILE)
+		if (huffTree[nodePosition].glyph == NULL)
 		{
 			return;
-		}*/
+		}
 
 		if (bitString[i] == 1 && huffTree[nodePosition].rightPointer != -1)
 		{
@@ -118,8 +107,8 @@ void writeBitString(ofstream& fout, huffEntry* huffTree, int* bitString, int huf
 
 		else
 		{
-
-			fout.write((char*)&huffTree[nodePosition].glyph, sizeof(unsigned char));
+			fout << huffTree[nodePosition].glyph;
+			//fout.write((char*)&huffTree[nodePosition].glyph, sizeof(unsigned char));
 			nodePosition = 0;
 			i--;
 		}
@@ -135,8 +124,6 @@ int main()
 	int huffDataSize = 0;
 	int fileNameLength = 0;
 	int huffHeaderSize = 0;
-	unsigned char* compressedFile = new unsigned char[fileNameLength];
-	huffEntry* huffTree = new huffEntry[huffTableEntries];
 
 	string filename;
 	cout << "What is the file you would like to decompress? ";
@@ -144,30 +131,44 @@ int main()
 
 	ifstream fin(filename, ios::in | ios::binary);
 
-	fin.seekg(0, ios::end);
-	huffFileSize = fin.tellg();
-	fin.seekg(0, ios::beg);
+	if (fin)
+	{
+		fin.seekg(0, ios::end);
+		huffFileSize = fin.tellg();
+		fin.seekg(0, ios::beg);
 
-	readHeader(fin, huffTableEntries, fileNameLength, compressedFile);
-	string fileName(reinterpret_cast<char*>(compressedFile));
-	cout << endl << fileName << endl;
-	ofstream fout(fileName, ios::binary | ios::out);
+		fin.read((char*)&fileNameLength, sizeof(int));
+		unsigned char* compressedFile = new unsigned char[fileNameLength];
 
-	huffHeaderSize = fileNameLength + (sizeof(int) * 2);
-	huffTableByteSize = huffEntrySize * huffTableEntries;
-	huffDataSize = huffFileSize - ((huffTableEntries * huffEntrySize) + huffHeaderSize);
-	int huffDataBitSize = huffDataSize * BYTESIZE;
-	int* bitString = new int[huffDataBitSize];
+		readHeader(fin, huffTableEntries, fileNameLength, compressedFile);
+		string fileName(reinterpret_cast<char*>(compressedFile));
+		cout << endl << fileName << endl;
+		ofstream fout(fileName, ios::binary | ios::out);
 
-	readHuffTable(fin, huffTableEntries, huffTree);
-	readFileInfo(fin, huffDataSize, huffTree, bitString);
-	//fin.close();
-	writeBitString(fout, huffTree, bitString, huffDataBitSize);
-	fout.close();
+		huffEntry* huffTree = new huffEntry[huffTableEntries];
 
-	delete[]huffTree;
-	delete[]compressedFile;
-	delete[]bitString;
+		huffHeaderSize = fileNameLength + (sizeof(int) * 2);
+		huffTableByteSize = huffEntrySize * huffTableEntries;
+		huffDataSize = huffFileSize - ((huffTableEntries * huffEntrySize) + huffHeaderSize);
+		int huffDataBitSize = huffDataSize * BYTESIZE;
+		int* bitString = new int[huffDataBitSize];
 
+		readHuffTable(fin, huffTableEntries, huffTree);
+		readFileInfo(fin, huffDataSize, huffTree, bitString);
+
+		writeBitString(fout, huffTree, bitString, huffDataBitSize);
+		fout.close();
+		fin.close();
+		delete[huffTableEntries] huffTree;
+		//delete[fileNameLength] compressedFile;
+		delete[huffDataBitSize] bitString;
+	}
+
+	else
+	{
+		cout << "unable to open file...program exiting" << endl;
+		exit(EXIT_FAILURE);
+	}
 	return 0;
 }
+

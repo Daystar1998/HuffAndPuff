@@ -11,7 +11,7 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
-#include <unordered_map>
+//#include <unordered_map>
 #include <string>
 #include <vector>
 
@@ -227,29 +227,29 @@ void buildHuffmanTable(vector<HuffmanNode> &huffmanTable, int topOfHeap) {
 		Generate map of glyph bitcodes
 	Params:
 		huffmanTable - type vector<HuffmanNode> &, the huffman table
-		bitcodeMap - type map<int, string> &, the map of glyphs to bitcodes
+		bitcodeArray - type string[MAX_GLYPHS], the array of glyphs bitcodes
 		bitcode - type string, the current bitcode
 		currentIndex - type int, the current node index
 		oCompressedDataLength - type int &, the length of the compressedData
 ******************************************************************************/
-void generateBitcodes(vector<HuffmanNode> &huffmanTable, unordered_map<int, string> &bitcodeMap, string bitcode, int currentIndex, int &oCompressedDataLength) {
+void generateBitcodes(vector<HuffmanNode> &huffmanTable, string bitcodeArray[MAX_GLYPHS], string bitcode, int currentIndex, int &oCompressedDataLength) {
 
 	HuffmanNode currentNode = huffmanTable[currentIndex];
 
 	if (currentNode.left == DEFAULT_NODE_POINTER && currentNode.right == DEFAULT_NODE_POINTER) {
 
-		bitcodeMap[currentNode.glyph] = bitcode;
+		bitcodeArray[currentNode.glyph] = bitcode;
 		oCompressedDataLength += (int)bitcode.size() * currentNode.frequency;
 	} else {
 
 		if (currentNode.left != DEFAULT_NODE_POINTER) {
 
-			generateBitcodes(huffmanTable, bitcodeMap, bitcode + '0', currentNode.left, oCompressedDataLength);
+			generateBitcodes(huffmanTable, bitcodeArray, bitcode + '0', currentNode.left, oCompressedDataLength);
 		}
 
 		if (currentNode.right != DEFAULT_NODE_POINTER) {
 
-			generateBitcodes(huffmanTable, bitcodeMap, bitcode + '1', currentNode.right, oCompressedDataLength);
+			generateBitcodes(huffmanTable, bitcodeArray, bitcode + '1', currentNode.right, oCompressedDataLength);
 		}
 	}
 }
@@ -259,7 +259,7 @@ void generateBitcodes(vector<HuffmanNode> &huffmanTable, unordered_map<int, stri
 	Des:
 		Compress the data using bitcodes
 	Params:
-		bitcodeMap - type map<int, string> &bitcodeMap &, the map of bitcodes
+		bitcodeArray - type string[MAX_GLYPHS], the array of glyphs bitcodes
 		data - type char *, the original data
 		dataLength - type int, the length of the original data
 		compressedDataLengthInBytes - type int, the length of the
@@ -267,7 +267,7 @@ void generateBitcodes(vector<HuffmanNode> &huffmanTable, unordered_map<int, stri
 	Returns:
 		type unsigned char*, the compressed data
 ******************************************************************************/
-unsigned char *compressData(unordered_map<int, string> &bitcodeMap, char *data, int dataLength, int compressedDataLengthInBytes) {
+unsigned char *compressData(string bitcodeArray[MAX_GLYPHS], char *data, int dataLength, int compressedDataLengthInBytes) {
 
 	unsigned char *compressedData = new unsigned char[compressedDataLengthInBytes] { 0 };
 
@@ -277,7 +277,7 @@ unsigned char *compressData(unordered_map<int, string> &bitcodeMap, char *data, 
 	// Encode right to left
 	for (int i = 0; i < dataLength; i++) {
 
-		string currentGlyphBitcode = bitcodeMap[(unsigned char)data[i]];
+		string currentGlyphBitcode = bitcodeArray[(unsigned char)data[i]];
 
 		for (int j = 0; j < currentGlyphBitcode.size(); j++) {
 
@@ -301,7 +301,7 @@ unsigned char *compressData(unordered_map<int, string> &bitcodeMap, char *data, 
 	}
 
 	// Add EOF glyph
-	string currentGlyphBitcode = bitcodeMap[EOF_GLYPH];
+	string currentGlyphBitcode = bitcodeArray[EOF_GLYPH];
 
 	for (int j = 0; j < currentGlyphBitcode.size(); j++) {
 
@@ -374,7 +374,6 @@ int main() {
 
 	cout << "Enter the name of the file you want to compress: ";
 
-	// TODO: Restore this
 	cin >> fileName;
 
 	clock_t startTime = clock();
@@ -389,16 +388,16 @@ int main() {
 
 		buildHuffmanTable(huffmanTable, (int)huffmanTable.size() - 1);
 
-		unordered_map<int, string> bitcodeMap(MAX_GLYPHS);
+		string bitcodeArray[MAX_GLYPHS];
 
 		int compressedDataLength = 0;
 
-		generateBitcodes(huffmanTable, bitcodeMap, "", ROOT_NODE, compressedDataLength);
+		generateBitcodes(huffmanTable, bitcodeArray, "", ROOT_NODE, compressedDataLength);
 
 		// Convert from bits to bytes
 		compressedDataLength = (int)ceil(compressedDataLength / (double)BYTE_SIZE);
 
-		unsigned char *compressedData = compressData(bitcodeMap, data, dataLength, compressedDataLength);
+		unsigned char *compressedData = compressData(bitcodeArray, data, dataLength, compressedDataLength);
 
 		printOutput(fileName, huffmanTable, compressedData, compressedDataLength);
 

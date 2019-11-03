@@ -7,7 +7,9 @@
 ******************************************************************************/
 
 #include <algorithm>
+#include <ctime>
 #include <fstream>
+#include <iomanip>
 #include <iostream>
 #include <map>
 #include <string>
@@ -373,6 +375,8 @@ int main() {
 
 	cin >> fileName;
 
+	clock_t startTime = clock();
+
 	int dataLength;
 
 	char *data = readFile(fileName, dataLength);
@@ -398,5 +402,10 @@ int main() {
 
 		delete[compressedDataLength] compressedData;
 		delete[dataLength] data;
+
+		clock_t endTime = clock();
+		double secondsTaken = ((double)endTime - (double)startTime) / CLOCKS_PER_SEC;
+
+		cout << "Time taken: " << fixed << setprecision(6) << secondsTaken << endl;
 	}
 }

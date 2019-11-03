@@ -373,6 +373,8 @@ int main() {
 
 	string fileName;
 
+	cout << "Enter the name of the file you want to compress: ";
+
 	cin >> fileName;
 
 	clock_t startTime = clock();

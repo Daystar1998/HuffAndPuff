@@ -6,19 +6,20 @@
 // 3) readFileInfo - reads the file information and stores it as an array of bits.
 // 4) writeBitString - decodes using the huffman table from readHuffTable and writes the bit string to the file title read in readHeader.
 // Name: Taylor Barber
-// Date: 10/6/2019
+// Date: 11/3/2019
 #include <iostream>
 #include <string>
 #include <fstream>
-#include <vector>
 #include <iomanip>
 #include <sstream>
+#include <ctime>
 using namespace std;
 
 const int huffEntrySize = 12;
 const int ENDOFFILE = 256;
 const int BYTESIZE = 8;
 
+// Struct to contain the data stored in a entry in the huffman table.
 struct huffEntry
 {
 	int glyph;
@@ -41,7 +42,8 @@ void readFileInfo(ifstream& fin, int huffDataSize, huffEntry* huffTree, int* bit
 	short bitPos;
 	int huffDataBitCounter = 0;
 
-	//test bits
+	// test bits in the byte specified to store it in the
+	// bitString array in reverse byte architecture.
 	for (int i = 0; i < huffDataSize; i++)
 	{
 		byte = fileData[i];
@@ -134,24 +136,29 @@ int main()
 	cout << "What is the file you would like to decompress? ";
 	cin >> filename;
 
+	clock_t begin = clock();
+
 	ifstream fin(filename, ios::in | ios::binary);
 
 	if (fin)
 	{
+		// Gets the huf file size
 		fin.seekg(0, ios::end);
 		huffFileSize = fin.tellg();
 		fin.seekg(0, ios::beg);
 
+		// Reads in the file name length from the huf file and uses it
+		// to create an array of unsigned chars for the file name
 		fin.read((char*)&fileNameLength, sizeof(int));
 		unsigned char* compressedFile = new unsigned char[fileNameLength];
 
 		readHeader(fin, huffTableEntries, fileNameLength, compressedFile);
-		string fileName(reinterpret_cast<char*>(compressedFile));
-		
-		ofstream fout(fileName, ios::binary | ios::out);
 
+		// Created to store the huffman table
 		huffEntry* huffTree = new huffEntry[huffTableEntries];
 
+		//Gets the size of the file data in bits from the huff file to create a string of bits
+		// from the file data
 		huffHeaderSize = fileNameLength + BYTESIZE;
 		huffTableByteSize = huffEntrySize * huffTableEntries;
 		huffDataSize = huffFileSize - ((huffTableEntries * huffEntrySize) + huffHeaderSize);
@@ -161,12 +168,25 @@ int main()
 		readHuffTable(fin, huffTableEntries, huffTree);
 		readFileInfo(fin, huffDataSize, huffTree, bitString);
 
-		writeBitString(fout, huffTree, bitString, huffDataBitSize);
-		fout.close();
-		fin.close();
-		delete[huffTableEntries] huffTree;
-		//delete[fileNameLength] compressedFile;
-		delete[huffDataBitSize] bitString;
+		// Converts the file name to a string to use it in creating an output file
+		string fileName(reinterpret_cast<char*>(compressedFile));
+		ofstream fout(fileName, ios::binary | ios::out);
+
+		if (fout)
+		{
+			writeBitString(fout, huffTree, bitString, huffDataBitSize);
+
+			fout.close();
+			fin.close();
+			delete[huffTableEntries] huffTree;
+			delete[huffDataBitSize] bitString;
+		}
+
+		else
+		{
+			cout << "unable to open output file...program exiting" << endl;
+			exit(EXIT_FAILURE);
+		}
 	}
 
 	else
@@ -174,5 +194,9 @@ int main()
 		cout << "unable to open file...program exiting" << endl;
 		exit(EXIT_FAILURE);
 	}
+
+	clock_t end = clock();
+	double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
+	cout << "Time elapsed: " << elapsed_secs << endl;
 	return 0;
 }

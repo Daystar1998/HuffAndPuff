@@ -1,8 +1,11 @@
 /******************************************************************************
 	Name: huff.h
+
 	Des:
 		Performs a file compression using the Huffman algorithm
+
 	Author: Matthew Day
+
 	Date: 10/28/2019
 ******************************************************************************/
 
@@ -11,7 +14,6 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
-//#include <unordered_map>
 #include <string>
 #include <vector>
 
@@ -19,6 +21,8 @@ using namespace std;
 
 const int MAX_GLYPHS = 257;
 const int EOF_GLYPH = 256;
+
+const int MAX_HUFFMAN_NODES = 513;
 
 const int BYTE_SIZE = 8;
 
@@ -39,11 +43,14 @@ struct HuffmanNode {
 
 /******************************************************************************
 	Name: readFile
+
 	Des:
 		Reads a file
+
 	Params:
 		fileName - type string &, the name of the file
 		oDataLength - type int &, the length of the data
+
 	Returns:
 		type char *, the contents of the file
 ******************************************************************************/
@@ -69,11 +76,14 @@ char *readFile(string &fileName, int &oDataLength) {
 
 /******************************************************************************
 	Name: generateInitialHuffmanTable
+
 	Des:
 		Builds the huffman table
+
 	Params:
 		data - type char *, the data for the huffman table
 		data - type int, the length of the data
+
 	Returns:
 		type vector<HuffmanNode>, the huffman table
 ******************************************************************************/
@@ -91,6 +101,7 @@ vector<HuffmanNode> generateInitialHuffmanTable(char *data, int dataLength) {
 	frequencyTable[EOF_GLYPH] = 1;
 
 	vector<HuffmanNode> result;
+	result.reserve(MAX_HUFFMAN_NODES);
 
 	for (int i = 0; i < MAX_GLYPHS; i++) {
 
@@ -119,8 +130,10 @@ vector<HuffmanNode> generateInitialHuffmanTable(char *data, int dataLength) {
 
 /******************************************************************************
 	Name: reheap
+
 	Des:
 		Reheap the huffman table if necessary
+
 	Params:
 		huffmanTable - type vector<HuffmanNode> &, the huffman table
 		reheapStartIndex - type int, the index where the reheap should start
@@ -128,8 +141,8 @@ vector<HuffmanNode> generateInitialHuffmanTable(char *data, int dataLength) {
 ******************************************************************************/
 void reheap(vector<HuffmanNode> &huffmanTable, int reheapStartIndex, int topOfHeap) {
 
-	int leftNodeIndex = reheapStartIndex * 2 + 1;
-	int rightNodeIndex = reheapStartIndex * 2 + 2;
+	const int leftNodeIndex = reheapStartIndex * 2 + 1;
+	const int rightNodeIndex = reheapStartIndex * 2 + 2;
 
 	if (rightNodeIndex <= topOfHeap) {
 
@@ -169,8 +182,10 @@ void reheap(vector<HuffmanNode> &huffmanTable, int reheapStartIndex, int topOfHe
 
 /******************************************************************************
 	Name: buildHuffmanTable
+
 	Des:
 		Builds the huffman table
+
 	Params:
 		huffmanTable - type vector<HuffmanNode> &, the huffman table
 		topOfHeap - type int, top of the heap of unsorted nodes
@@ -223,11 +238,13 @@ void buildHuffmanTable(vector<HuffmanNode> &huffmanTable, int topOfHeap) {
 
 /******************************************************************************
 	Name: generateBitcodes
+
 	Des:
 		Generate map of glyph bitcodes
+
 	Params:
 		huffmanTable - type vector<HuffmanNode> &, the huffman table
-		bitcodeArray - type string[MAX_GLYPHS], the array of glyphs bitcodes
+		bitcodeArray - type string[MAX_GLYPHS], the array of glyph bitcodes
 		bitcode - type string, the current bitcode
 		currentIndex - type int, the current node index
 		oCompressedDataLength - type int &, the length of the compressedData
@@ -256,10 +273,12 @@ void generateBitcodes(vector<HuffmanNode> &huffmanTable, string bitcodeArray[MAX
 
 /******************************************************************************
 	Name: compressData
+
 	Des:
 		Compress the data using bitcodes
+
 	Params:
-		bitcodeArray - type string[MAX_GLYPHS], the array of glyphs bitcodes
+		bitcodeArray - type string[MAX_GLYPHS], the array of glyph bitcodes
 		data - type char *, the original data
 		dataLength - type int, the length of the original data
 		compressedDataLengthInBytes - type int, the length of the
@@ -277,9 +296,12 @@ unsigned char *compressData(string bitcodeArray[MAX_GLYPHS], char *data, int dat
 	// Encode right to left
 	for (int i = 0; i < dataLength; i++) {
 
-		string currentGlyphBitcode = bitcodeArray[(unsigned char)data[i]];
+		const string &bitcode = bitcodeArray[(unsigned char)data[i]];
 
-		for (int j = 0; j < currentGlyphBitcode.size(); j++) {
+		const char *bitcodeChars = bitcode.c_str();
+		const size_t bitcodeSize = bitcode.size();
+
+		for (int j = 0; j < bitcodeSize; j++) {
 
 			if (currentBit >= sizeof(char) * BYTE_SIZE) {
 
@@ -287,7 +309,7 @@ unsigned char *compressData(string bitcodeArray[MAX_GLYPHS], char *data, int dat
 				currentCompressedByte++;
 			}
 
-			if (currentGlyphBitcode[j] == '1') {
+			if (bitcodeChars[j] == '1') {
 
 				unsigned char bit = 0b00000001 << currentBit;
 				compressedData[currentCompressedByte] |= bit;
@@ -301,7 +323,7 @@ unsigned char *compressData(string bitcodeArray[MAX_GLYPHS], char *data, int dat
 	}
 
 	// Add EOF glyph
-	string currentGlyphBitcode = bitcodeArray[EOF_GLYPH];
+	const string currentGlyphBitcode = bitcodeArray[EOF_GLYPH];
 
 	for (int j = 0; j < currentGlyphBitcode.size(); j++) {
 
@@ -328,8 +350,10 @@ unsigned char *compressData(string bitcodeArray[MAX_GLYPHS], char *data, int dat
 
 /******************************************************************************
 	Name: printOutput
+
 	Des:
 		Print the compressed data to a file
+
 	Params:
 		fileName - type string &, the name of the file
 		huffmanTable - type vector<HuffmanNode> &, the huffman table
@@ -339,16 +363,16 @@ unsigned char *compressData(string bitcodeArray[MAX_GLYPHS], char *data, int dat
 ******************************************************************************/
 void printOutput(string &fileName, vector<HuffmanNode> &huffmanTable, unsigned char *compressedData, int compressedDataLengthInBytes) {
 
-	string hufFileExtension = ".huf";
+	const string hufFileExtension = ".huf";
 
-	string outputFileName = fileName.substr(0, fileName.find_last_of('.')) + hufFileExtension;
+	const string outputFileName = fileName.substr(0, fileName.find_last_of('.')) + hufFileExtension;
 
 	ofstream fout(outputFileName, ios::out | ios::binary);
 
 	if (fout.is_open()) {
 
-		int originalFileNameLength = (int)fileName.size();
-		int numberOfHuffmanEntries = (int)huffmanTable.size();
+		size_t originalFileNameLength = fileName.size();
+		size_t numberOfHuffmanEntries = huffmanTable.size();
 
 		fout.write((char *)& originalFileNameLength, sizeof(int));
 		fout.write((char *)fileName.c_str(), originalFileNameLength);

@@ -28,9 +28,6 @@
       <Filter>Resource Files</Filter>
     </None>
     <None Include="text1.huf" />
-    <None Include="ttax.huf">
-      <Filter>Source Files</Filter>
-    </None>
     <None Include="ttax.exe">
       <Filter>Source Files</Filter>
     </None>
@@ -42,6 +39,9 @@
     </None>
     <None Include="ptw32.huf">
       <Filter>Resource Files</Filter>
+    </None>
+    <None Include="ttax.huf.backup">
+      <Filter>Source Files</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

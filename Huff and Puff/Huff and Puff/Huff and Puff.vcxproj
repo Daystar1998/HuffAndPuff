@@ -133,7 +133,7 @@
     <None Include="text1.huf" />
     <None Include="test.bin" />
     <None Include="ttax.exe" />
-    <None Include="ttax.huf" />
+    <None Include="ttax.huf.backup" />
     <None Include="ttaxCreate.exe" />
   </ItemGroup>
   <ItemGroup>

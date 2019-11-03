@@ -11,7 +11,7 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
-#include <map>
+#include <unordered_map>
 #include <string>
 #include <vector>
 
@@ -232,7 +232,7 @@ void buildHuffmanTable(vector<HuffmanNode> &huffmanTable, int topOfHeap) {
 		currentIndex - type int, the current node index
 		oCompressedDataLength - type int &, the length of the compressedData
 ******************************************************************************/
-void generateBitcodes(vector<HuffmanNode> &huffmanTable, map<int, string> &bitcodeMap, string bitcode, int currentIndex, int &oCompressedDataLength) {
+void generateBitcodes(vector<HuffmanNode> &huffmanTable, unordered_map<int, string> &bitcodeMap, string bitcode, int currentIndex, int &oCompressedDataLength) {
 
 	HuffmanNode currentNode = huffmanTable[currentIndex];
 
@@ -267,7 +267,7 @@ void generateBitcodes(vector<HuffmanNode> &huffmanTable, map<int, string> &bitco
 	Returns:
 		type unsigned char*, the compressed data
 ******************************************************************************/
-unsigned char *compressData(map<int, string> &bitcodeMap, char *data, int dataLength, int compressedDataLengthInBytes) {
+unsigned char *compressData(unordered_map<int, string> &bitcodeMap, char *data, int dataLength, int compressedDataLengthInBytes) {
 
 	unsigned char *compressedData = new unsigned char[compressedDataLengthInBytes] { 0 };
 
@@ -275,7 +275,6 @@ unsigned char *compressData(map<int, string> &bitcodeMap, char *data, int dataLe
 	int currentBit = 0;
 
 	// Encode right to left
-
 	for (int i = 0; i < dataLength; i++) {
 
 		string currentGlyphBitcode = bitcodeMap[(unsigned char)data[i]];
@@ -375,6 +374,7 @@ int main() {
 
 	cout << "Enter the name of the file you want to compress: ";
 
+	// TODO: Restore this
 	cin >> fileName;
 
 	clock_t startTime = clock();
@@ -389,7 +389,7 @@ int main() {
 
 		buildHuffmanTable(huffmanTable, (int)huffmanTable.size() - 1);
 
-		map<int, string> bitcodeMap;
+		unordered_map<int, string> bitcodeMap(MAX_GLYPHS);
 
 		int compressedDataLength = 0;
 
@@ -404,10 +404,10 @@ int main() {
 
 		delete[compressedDataLength] compressedData;
 		delete[dataLength] data;
-
-		clock_t endTime = clock();
-		double secondsTaken = ((double)endTime - (double)startTime) / CLOCKS_PER_SEC;
-
-		cout << "Time taken: " << fixed << setprecision(6) << secondsTaken << endl;
 	}
+
+	clock_t endTime = clock();
+	double secondsTaken = ((double)endTime - (double)startTime) / CLOCKS_PER_SEC;
+
+	cout << "Time taken: " << fixed << setprecision(6) << secondsTaken << endl;
 }
